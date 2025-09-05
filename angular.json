@@ -65,10 +65,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "eco-primeng-app:build:production"
+              "buildTarget": "julley-hyd-eco-park-ui_v2:build:production"
             },
             "development": {
-              "buildTarget": "eco-primeng-app:build:development"
+              "buildTarget": "julley-hyd-eco-park-ui_v2:build:development"
             }
           },
           "defaultConfiguration": "development"
