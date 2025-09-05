@@ -1,0 +1,165 @@
+<div class="p-4">
+  <h1 class="text-2xl font-bold mb-4">General Settings</h1>
+  
+  <p-table [value]="settings" [paginator]="true" [rows]="10" [sortMode]="'multiple'">
+    <ng-template pTemplate="caption">
+      <div class="flex justify-end">
+        <p-button label="Add New Setting" icon="pi pi-plus" (onClick)="showAddDialog()"></p-button>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="settingId">ID <p-sortIcon field="settingId"></p-sortIcon></th>
+        <th pSortableColumn="settingKey">Key <p-sortIcon field="settingKey"></p-sortIcon></th>
+        <th pSortableColumn="displayName">Display Name <p-sortIcon field="displayName"></p-sortIcon></th>
+        <th pSortableColumn="settingValue">Value <p-sortIcon field="settingValue"></p-sortIcon></th>
+        <th pSortableColumn="description">Description <p-sortIcon field="description"></p-sortIcon></th>
+        <th pSortableColumn="settingsCategory">Category <p-sortIcon field="settingsCategory"></p-sortIcon></th>
+        <th pSortableColumn="isActive">Active <p-sortIcon field="isActive"></p-sortIcon></th>
+        <th pSortableColumn="createdAt">Created At <p-sortIcon field="createdAt"></p-sortIcon></th>
+        <th pSortableColumn="updatedAt">Updated At <p-sortIcon field="updatedAt"></p-sortIcon></th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-setting>
+      <tr>
+        <td>{{ setting.settingId }}</td>
+        <td class="font-mono text-sm">{{ setting.settingKey }}</td>
+        <td class="font-semibold">{{ setting.displayName }}</td>
+        <td class="max-w-xs truncate">{{ setting.settingValue }}</td>
+        <td class="max-w-sm truncate">{{ setting.description }}</td>
+        <td>
+          <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+            {{ setting.settingsCategory }}
+          </span>
+        </td>
+        <td>
+          <span [class]="setting.isActive ? 'text-green-600' : 'text-red-600'">
+            {{ setting.isActive ? 'Yes' : 'No' }}
+          </span>
+        </td>
+        <td>{{ setting.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+        <td>{{ setting.updatedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+        <td>
+          <div class="flex gap-2">
+            <p-button 
+              icon="pi pi-pencil" 
+              severity="info" 
+              [text]="true"
+              size="small"
+              (onClick)="showEditDialog(setting)"
+              pTooltip="Edit setting">
+            </p-button>
+            <p-button 
+              icon="pi pi-trash" 
+              severity="danger" 
+              [text]="true"
+              size="small"
+              (onClick)="deleteSetting(setting)"
+              pTooltip="Delete setting">
+            </p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Add New Setting Dialog -->
+  <p-dialog 
+    [(visible)]="displayDialog" 
+    [header]="editMode ? 'Edit Setting' : 'Add New Setting'"
+    [modal]="true" 
+    [closable]="true"
+    [style]="{ width: '600px' }"
+    (onHide)="hideDialog()">
+    
+    <div class="space-y-4">
+      <div class="field">
+        <label for="settingKey" class="block text-sm font-semibold mb-2">Setting Key *</label>
+        <input 
+          pInputText
+          id="settingKey"
+          [(ngModel)]="newSetting.settingKey"
+          placeholder="Enter setting key"
+          class="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="displayName" class="block text-sm font-semibold mb-2">Display Name *</label>
+        <input 
+          pInputText
+          id="displayName"
+          [(ngModel)]="newSetting.displayName"
+          placeholder="Enter display name"
+          class="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="settingValue" class="block text-sm font-semibold mb-2">Setting Value *</label>
+        <input 
+          pInputText
+          id="settingValue"
+          [(ngModel)]="newSetting.settingValue"
+          placeholder="Enter setting value"
+          class="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="description" class="block text-sm font-semibold mb-2">Description</label>
+        <textarea 
+          pTextarea
+          id="description"
+          [(ngModel)]="newSetting.description"
+          placeholder="Enter description"
+          rows="3"
+          class="w-full">
+        </textarea>
+      </div>
+
+      <div class="field">
+        <label for="settingsCategory" class="block text-sm font-semibold mb-2">Category *</label>
+        <p-select 
+          id="settingsCategory"
+          [(ngModel)]="newSetting.settingsCategory"
+          [options]="categoryOptions"
+          placeholder="Select category"
+          optionLabel="label"
+          optionValue="value"
+          [appendTo]="'body'"
+          class="w-full">
+        </p-select>
+      </div>
+
+      <div>
+        <label for="status" class="block text-sm font-semibold mb-2">Status</label>
+        <p-select 
+          id="status"
+          [(ngModel)]="newSetting.isActive"
+          [options]="statusOptions"
+          placeholder="Select status"
+          optionLabel="label"
+          optionValue="value"
+          [appendTo]="'body'"
+          class="w-full">
+        </p-select>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-2">
+        <p-button 
+          label="Cancel" 
+          (onClick)="hideDialog()"
+          severity="secondary">
+        </p-button>
+        <p-button 
+          [label]="editMode ? 'Update' : 'Save'"
+          (onClick)="saveSetting()"
+          severity="success">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog></p-confirmDialog>
+</div>

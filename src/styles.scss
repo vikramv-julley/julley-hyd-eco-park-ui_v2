@@ -1,0 +1,22 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* PrimeNG v20+ imports */
+@import "primeicons/primeicons.css";
+@import "primeflex/primeflex.css";
+
+/* Base PrimeNG styles - may be needed even with JS theming */
+html, body {
+  height: 100%;
+}
+
+/* Ensure PrimeNG components have base styling */
+.p-component {
+  font-family: inherit;
+}
+
+/* Global Styles for Eco App */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f8f9fa;
+}

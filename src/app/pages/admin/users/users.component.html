@@ -1,0 +1,115 @@
+<div class="p-4">
+    <h1 class="text-2xl font-bold">User Management</h1>
+
+  <p-table [value]="users" [paginator]="true" [rows]="10" [sortMode]="'multiple'">
+    <ng-template pTemplate="caption">
+      <div class="flex justify-end">
+        <p-button label="Add User" icon="pi pi-plus" (onClick)="showAddDialog()" class="p-button-primary"></p-button>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="username">Username <p-sortIcon field="username"></p-sortIcon></th>
+        <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+        <th pSortableColumn="phone">Phone <p-sortIcon field="phone"></p-sortIcon></th>
+        <th pSortableColumn="userGroup">User Group <p-sortIcon field="userGroup"></p-sortIcon></th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-user>
+      <tr>
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.phone }}</td>
+        <td>
+          <span [class]="user.userGroup === 'ADMIN' ? 'text-blue-600 font-semibold' : 'text-green-600'">
+            {{ user.userGroup }}
+          </span>
+        </td>
+        <td>
+          <p-button 
+            icon="pi pi-trash" 
+            severity="danger" 
+            [text]="true"
+            size="small"
+            (onClick)="deleteUser(user)"
+            pTooltip="Delete user">
+          </p-button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-dialog
+    header="Create New User"
+    [(visible)]="displayDialog"
+    [modal]="true"
+    [closable]="true"
+    [style]="{width: '450px'}"
+    (onHide)="hideDialog()">
+
+    <div class="space-y-4">
+      <div class="field">
+        <label for="username" class="block text-sm font-semibold mb-2">Username *</label>
+        <input
+          id="username"
+          type="text"
+          pInputText
+          [(ngModel)]="newUser.username"
+          placeholder="Enter username"
+          class="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="email" class="block text-sm font-semibold mb-2">Email *</label>
+        <input
+          id="email"
+          type="email"
+          pInputText
+          [(ngModel)]="newUser.email"
+          placeholder="Enter email address"
+          class="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="phone" class="block text-sm font-semibold mb-2">Phone Number *</label>
+        <input
+          id="phone"
+          type="text"
+          pInputText
+          [(ngModel)]="newUser.phone"
+          placeholder="Enter phone number"
+          class="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="userGroup" class="block text-sm font-semibold mb-2">User Group *</label>
+        <p-select
+          id="userGroup"
+          [(ngModel)]="newUser.userGroup"
+          [options]="userGroupOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select user group"
+          class="w-full" />
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-2">
+        <p-button
+          label="Cancel"
+          icon="pi pi-times"
+          (onClick)="hideDialog()"
+          class="p-button-text" />
+        <p-button
+          label="Create User"
+          icon="pi pi-check"
+          (onClick)="saveUser()"
+          class="p-button-primary" />
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog></p-confirmDialog>
+</div>

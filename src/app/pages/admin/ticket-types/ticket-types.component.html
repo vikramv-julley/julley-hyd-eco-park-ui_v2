@@ -1,0 +1,147 @@
+<div class="p-4">
+  <h1 class="text-2xl font-bold mb-4">Ticket Types</h1>
+
+  <p-table [value]="ticketTypes" [paginator]="true" [rows]="10" [sortMode]="'multiple'">
+    <ng-template pTemplate="caption">
+      <div class="flex justify-end">
+        <p-button label="Add New Ticket Type" icon="pi pi-plus" (onClick)="showAddDialog()"></p-button>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="type_id">ID <p-sortIcon field="type_id"></p-sortIcon></th>
+        <th pSortableColumn="category_name">Category <p-sortIcon field="category_name"></p-sortIcon></th>
+        <th pSortableColumn="offering_name">Offering <p-sortIcon field="offering_name"></p-sortIcon></th>
+        <th pSortableColumn="unit_price">Unit Price (₹) <p-sortIcon field="unit_price"></p-sortIcon></th>
+        <th pSortableColumn="extra_price_per_person">Extra Price per Person (₹) <p-sortIcon field="extra_price_per_person"></p-sortIcon></th>
+        <th pSortableColumn="create_date">Created Date <p-sortIcon field="create_date"></p-sortIcon></th>
+        <th pSortableColumn="is_active">Active <p-sortIcon field="is_active"></p-sortIcon></th>
+        <th pSortableColumn="created_by">Created By <p-sortIcon field="created_by"></p-sortIcon></th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-ticketType>
+      <tr>
+        <td>{{ ticketType.type_id }}</td>
+        <td>{{ ticketType.category_name }}</td>
+        <td>{{ ticketType.offering_name }}</td>
+        <td class="font-semibold">₹{{ ticketType.unit_price | number:'1.2-2' }}</td>
+        <td class="font-semibold">₹{{ ticketType.extra_price_per_person | number:'1.2-2' }}</td>
+        <td>{{ ticketType.create_date | date:'dd/MM/yyyy HH:mm' }}</td>
+        <td>
+          <span [class]="ticketType.is_active ? 'text-green-600' : 'text-red-600'">
+            {{ ticketType.is_active ? 'Yes' : 'No' }}
+          </span>
+        </td>
+        <td>{{ ticketType.created_by || 'N/A' }}</td>
+        <td>
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            size="small"
+            (onClick)="deleteTicketType(ticketType)"
+            pTooltip="Delete ticket type">
+          </p-button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Add New Ticket Type Dialog -->
+  <p-dialog
+    [(visible)]="displayDialog"
+    header="Add New Ticket Type"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '500px' }"
+    (onHide)="hideDialog()">
+
+    <div class="space-y-4">
+      <div>
+        <label for="category" class="block text-sm font-semibold mb-2">Category *</label>
+        <p-select
+          id="category"
+          [(ngModel)]="newTicketType.category_id"
+          [options]="categories"
+          placeholder="Select category"
+          optionLabel="name"
+          optionValue="category_id"
+          [appendTo]="'body'"
+          class="w-full">
+        </p-select>
+      </div>
+
+      <div>
+        <label for="offering" class="block text-sm font-semibold mb-2">Offering *</label>
+        <p-select
+          id="offering"
+          [(ngModel)]="newTicketType.offering_id"
+          [options]="offerings"
+          placeholder="Select offering"
+          optionLabel="name"
+          optionValue="offering_id"
+          [appendTo]="'body'"
+          class="w-full">
+        </p-select>
+      </div>
+
+      <div>
+        <label for="unitPrice" class="block text-sm font-semibold mb-2">Unit Price (₹) *</label>
+        <p-inputNumber
+          id="unitPrice"
+          [(ngModel)]="newTicketType.unit_price"
+          placeholder="Enter unit price"
+          [min]="0"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          class="w-full">
+        </p-inputNumber>
+      </div>
+
+      <div>
+        <label for="extraPrice" class="block text-sm font-semibold mb-2">Extra Price per Person (₹) *</label>
+        <p-inputNumber
+          id="extraPrice"
+          [(ngModel)]="newTicketType.extra_price_per_person"
+          placeholder="Enter extra price per person"
+          [min]="0"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          class="w-full">
+        </p-inputNumber>
+      </div>
+
+      <div>
+        <label for="status" class="block text-sm font-semibold mb-2">Status</label>
+        <p-select
+          id="status"
+          [(ngModel)]="newTicketType.is_active"
+          [options]="statusOptions"
+          placeholder="Select status"
+          optionLabel="label"
+          optionValue="value"
+          [appendTo]="'body'"
+          class="w-full">
+        </p-select>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-2">
+        <p-button
+          label="Cancel"
+          (onClick)="hideDialog()"
+          severity="secondary">
+        </p-button>
+        <p-button
+          label="Save"
+          (onClick)="saveTicketType()"
+          severity="success">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog></p-confirmDialog>
+</div>
