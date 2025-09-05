@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://13.235.31.61:8081',
+  apiUrl: 'http://3.110.218.148:8081',
   //apiUrl: 'http://localhost:8081',
   cognito: {
     userPoolId: 'ap-south-1_l57pOkQZo',
