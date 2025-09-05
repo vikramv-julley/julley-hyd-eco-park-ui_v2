@@ -7,8 +7,8 @@ export const environment = {
     clientId: '3kqjctb5d33gi872rkip326tbd',
     region: 'ap-south-1',
     domain: 'ap-south-1l57pokqzo.auth.ap-south-1.amazoncognito.com',
-    redirectSignIn: 'http://localhost:4200/callback',
-    redirectSignOut: 'http://localhost:4200/',
+    redirectSignIn: 'https://julleyonline.com/callback',
+    redirectSignOut: 'https://julleyonline.com/',
     responseType: 'code',
     issuerURL: 'https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_l57pOkQZo'
   }
