@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "eco-primeng-app": {
+    "julley-hyd-eco-park-ui_v2": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
