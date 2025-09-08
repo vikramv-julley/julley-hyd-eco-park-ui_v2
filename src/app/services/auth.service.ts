@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthResponse, AuthUser } from '../models/auth.model';
 
@@ -10,6 +11,7 @@ import { AuthResponse, AuthUser } from '../models/auth.model';
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private refreshTokenInProgress = false;
 
   constructor(private http: HttpClient) {}
 
@@ -139,5 +141,108 @@ export class AuthService {
     });
 
     return `https://${environment.cognito.domain}/logout?${params.toString()}`;
+  }
+
+  /**
+   * Check if the current access token is expired
+   */
+  isTokenExpired(): boolean {
+    const user = this.currentUser;
+    if (!user || !user.expiresAt) {
+      return true;
+    }
+    
+    // Add 5 minute buffer before actual expiry
+    const bufferTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const now = new Date().getTime();
+    const expiryTime = user.expiresAt.getTime() - bufferTime;
+    
+    return now >= expiryTime;
+  }
+
+  /**
+   * Get the stored refresh token
+   */
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refresh_token');
+  }
+
+  /**
+   * Refresh the access token using refresh token - Direct Cognito call
+   */
+  refreshToken(): Observable<any> {
+    if (this.refreshTokenInProgress) {
+      // If refresh is already in progress, wait for it
+      return throwError(() => new Error('Token refresh already in progress'));
+    }
+
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      console.error('AuthService: No refresh token available');
+      this.logout();
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    this.refreshTokenInProgress = true;
+
+    // Direct call to Cognito token endpoint
+    const tokenUrl = `https://${environment.cognito.domain}/oauth2/token`;
+    
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    };
+
+    const body = new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: environment.cognito.clientId,
+      refresh_token: refreshToken
+    });
+
+    console.log('AuthService: Refreshing access token directly with Cognito...');
+    
+    return this.http.post(tokenUrl, body.toString(), { headers })
+      .pipe(
+        tap((response: any) => {
+          console.log('AuthService: Cognito token refresh successful:', response);
+          
+          // Calculate expiry time (response.expires_in is in seconds)
+          const expiresAt = new Date();
+          expiresAt.setSeconds(expiresAt.getSeconds() + response.expires_in);
+          
+          // Update user object with new expiry time (keep existing user data)
+          const currentUser = this.currentUser;
+          if (currentUser) {
+            const updatedUser: AuthUser = {
+              ...currentUser,
+              expiresAt: expiresAt
+            };
+            this.currentUserSubject.next(updatedUser);
+          }
+          
+          // Update stored tokens
+          localStorage.setItem('access_token', response.access_token);
+          if (response.refresh_token) {
+            // Cognito may return a new refresh token
+            localStorage.setItem('refresh_token', response.refresh_token);
+          }
+          if (response.id_token) {
+            localStorage.setItem('id_token', response.id_token);
+          }
+          
+          this.refreshTokenInProgress = false;
+        }),
+        catchError((error) => {
+          console.error('AuthService: Cognito token refresh failed:', error);
+          this.refreshTokenInProgress = false;
+          
+          // If refresh fails, logout user
+          if (error.status === 400 || error.status === 401) {
+            console.log('AuthService: Refresh token invalid, logging out');
+            this.logout();
+          }
+          
+          return throwError(() => error);
+        })
+      );
   }
 }
