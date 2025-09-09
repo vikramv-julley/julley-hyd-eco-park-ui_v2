@@ -47,6 +47,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/admin/users/users.component').then(m => m.UsersComponent) 
   },
   { 
+    path: 'admin/special-days', 
+    loadComponent: () => import('./pages/admin/special-days/special-days.component').then(m => m.SpecialDaysComponent) 
+  },
+  { 
     path: 'callback', 
     loadComponent: () => import('./pages/auth-callback/auth-callback.component').then(m => m.AuthCallbackComponent) 
   },

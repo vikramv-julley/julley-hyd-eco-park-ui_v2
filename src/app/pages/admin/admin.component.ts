@@ -34,6 +34,18 @@ import { ButtonModule } from 'primeng/button';
           <p class="text-gray-600 mb-4">Configure system settings</p>
           <p-button label="Go to Settings" routerLink="/admin/general-settings" class="w-full"></p-button>
         </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h2 class="text-xl font-semibold mb-4">Special Days</h2>
+          <p class="text-gray-600 mb-4">Manage special pricing for holidays and events</p>
+          <p-button label="Go to Special Days" routerLink="/admin/special-days" class="w-full"></p-button>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h2 class="text-xl font-semibold mb-4">User Management</h2>
+          <p class="text-gray-600 mb-4">Manage system users and permissions</p>
+          <p-button label="Go to Users" routerLink="/admin/users" class="w-full"></p-button>
+        </div>
       </div>
     </div>
   `
