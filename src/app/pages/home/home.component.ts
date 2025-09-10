@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -12,9 +12,10 @@ import { CommonModule } from '@angular/common';
 })
 export class HomeComponent {
   
-  constructor(private router: Router) {}
+  constructor(private authService: AuthService) {}
 
   navigateToBookTickets() {
-    this.router.navigate(['/book-tickets']);
+    // Redirect to Cognito hosted UI for login
+    this.authService.redirectToLogin();
   }
 }

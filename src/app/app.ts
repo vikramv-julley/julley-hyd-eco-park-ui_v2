@@ -98,6 +98,11 @@ export class App implements OnInit, OnDestroy {
           routerLink: '/admin/users'
         },
         {
+          label: 'Special Days',
+          icon: 'pi pi-calendar-plus',
+          routerLink: '/admin/special-days'
+        },
+        {
           label: 'Dashboard',
           icon: 'pi pi-chart-bar'
         }

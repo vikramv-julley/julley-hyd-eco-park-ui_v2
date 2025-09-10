@@ -1,0 +1,203 @@
+<div class="p-4">
+  <h1 class="text-2xl font-bold mb-4">Special Days Management</h1>
+  
+  <p-table [value]="specialDays" [paginator]="true" [rows]="10" [sortMode]="'multiple'">
+    <ng-template pTemplate="caption">
+      <div class="flex justify-end">
+        <p-button label="Add Special Day" icon="pi pi-plus" (onClick)="showAddDialog()"></p-button>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="date">Date <p-sortIcon field="date"></p-sortIcon></th>
+        <th pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
+        <th>Description</th>
+        <th pSortableColumn="price_modifier">Price Modifier <p-sortIcon field="price_modifier"></p-sortIcon></th>
+        <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+        <th>Date Status</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-specialDay>
+      <tr>
+        <td>
+          <div class="flex items-center gap-2">
+            <span>{{ formatDisplayDate(specialDay.date) }}</span>
+            <p-tag 
+              [value]="getDateStatus(specialDay.date)" 
+              [severity]="getDateTagSeverity(specialDay.date)"
+              [style]="{ fontSize: '0.75rem' }">
+            </p-tag>
+          </div>
+        </td>
+        <td>
+          <span class="font-semibold">{{ specialDay.name }}</span>
+        </td>
+        <td>
+          <span class="text-gray-600">{{ specialDay.description || 'No description' }}</span>
+        </td>
+        <td>
+          <div class="flex items-center gap-2">
+            <span>{{ specialDay.price_modifier }}x</span>
+            <p-tag 
+              [value]="getPriceModifierDisplay(specialDay.price_modifier)"
+              [severity]="getPriceModifierSeverity(specialDay.price_modifier)"
+              [style]="{ fontSize: '0.75rem' }">
+            </p-tag>
+          </div>
+        </td>
+        <td>
+          <p-tag 
+            [value]="specialDay.status ? 'Active' : 'Inactive'"
+            [severity]="getStatusTagSeverity(specialDay.status)">
+          </p-tag>
+        </td>
+        <td>
+          <span 
+            [class]="getDateStatus(specialDay.date) === 'today' ? 'text-green-600 font-semibold' : 
+                     getDateStatus(specialDay.date) === 'past' ? 'text-gray-500' : 'text-blue-600'">
+            {{ getDateStatus(specialDay.date) === 'today' ? 'Today' :
+               getDateStatus(specialDay.date) === 'past' ? 'Past' : 'Upcoming' }}
+          </span>
+        </td>
+        <td>
+          <div class="flex gap-2">
+            <p-button 
+              icon="pi pi-pencil" 
+              severity="info" 
+              [text]="true"
+              size="small"
+              pTooltip="Edit special day"
+              (onClick)="showEditDialog(specialDay)">
+            </p-button>
+            <p-button 
+              [icon]="specialDay.status ? 'pi pi-eye-slash' : 'pi pi-eye'"
+              [severity]="specialDay.status ? 'secondary' : 'success'"
+              [text]="true"
+              size="small"
+              [pTooltip]="specialDay.status ? 'Deactivate' : 'Activate'"
+              (onClick)="toggleStatus(specialDay)">
+            </p-button>
+            <p-button 
+              icon="pi pi-trash" 
+              severity="danger" 
+              [text]="true"
+              size="small"
+              pTooltip="Delete special day"
+              (onClick)="deleteSpecialDay(specialDay)">
+            </p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="text-center py-8">
+          <div class="text-gray-500">
+            <i class="pi pi-calendar-times text-4xl mb-4 block"></i>
+            <p class="text-lg">No special days configured</p>
+            <p class="text-sm">Click "Add Special Day" to get started</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Add/Edit Special Day Dialog -->
+  <p-dialog 
+    [(visible)]="displayDialog" 
+    [header]="isEditMode ? 'Edit Special Day' : 'Add New Special Day'"
+    [modal]="true" 
+    [closable]="true"
+    [style]="{ width: '600px' }"
+    (onHide)="hideDialog()">
+    
+    <div class="space-y-4">
+      <div>
+        <label for="date" class="block text-sm font-semibold mb-2">Date *</label>
+        <p-datePicker 
+          id="date"
+          [(ngModel)]="newSpecialDay.date"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          placeholder="Select date"
+          [disabled]="isEditMode"
+          class="w-full">
+        </p-datePicker>
+        <small class="text-gray-500 mt-1 block">
+          {{ isEditMode ? 'Date cannot be changed when editing' : 'Select the date for this special day' }}
+        </small>
+      </div>
+
+      <div>
+        <label for="name" class="block text-sm font-semibold mb-2">Name *</label>
+        <input 
+          pInputText 
+          id="name" 
+          [(ngModel)]="newSpecialDay.name"
+          placeholder="e.g., Christmas, Diwali, New Year"
+          class="w-full" />
+      </div>
+
+      <div>
+        <label for="description" class="block text-sm font-semibold mb-2">Description</label>
+        <textarea 
+          pTextarea 
+          id="description" 
+          [(ngModel)]="newSpecialDay.description"
+          placeholder="Optional description for this special day"
+          rows="3"
+          class="w-full">
+        </textarea>
+      </div>
+
+      <div>
+        <label for="priceModifier" class="block text-sm font-semibold mb-2">Price Modifier *</label>
+        <p-inputNumber
+          id="priceModifier"
+          [(ngModel)]="newSpecialDay.price_modifier"
+          mode="decimal"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          [min]="0.01"
+          [max]="10"
+          [step]="0.1"
+          placeholder="1.00"
+          class="w-full">
+        </p-inputNumber>
+        <small class="text-gray-500 mt-1 block">
+          Multiplier for ticket prices (e.g., 1.5 = 50% increase, 0.8 = 20% decrease)
+        </small>
+      </div>
+
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <h4 class="font-semibold text-blue-800 mb-2">Price Modifier Examples:</h4>
+        <ul class="text-sm text-blue-700 space-y-1">
+          <li><strong>2.0</strong> - Double the price (100% increase)</li>
+          <li><strong>1.5</strong> - 50% price increase</li>
+          <li><strong>1.0</strong> - No change in price</li>
+          <li><strong>0.8</strong> - 20% discount</li>
+          <li><strong>0.5</strong> - 50% discount</li>
+        </ul>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-2">
+        <p-button 
+          label="Cancel" 
+          (onClick)="hideDialog()"
+          severity="secondary">
+        </p-button>
+        <p-button 
+          [label]="isEditMode ? 'Update' : 'Create'" 
+          (onClick)="saveSpecialDay()"
+          severity="success">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Confirmation Dialog -->
+  <p-confirmDialog></p-confirmDialog>
+</div>
