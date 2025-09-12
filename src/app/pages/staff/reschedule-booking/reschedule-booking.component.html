@@ -1,0 +1,205 @@
+<div class="container mx-auto p-4 max-w-6xl">
+  <p-card header="Reschedule Booking" [style]="{ 'min-height': '600px' }">
+    <div *ngIf="messages.length > 0" class="mb-4">
+      <div *ngFor="let msg of messages" 
+           [ngClass]="{
+             'bg-green-100 border-green-500 text-green-700': msg.severity === 'success',
+             'bg-red-100 border-red-500 text-red-700': msg.severity === 'error',
+             'bg-yellow-100 border-yellow-500 text-yellow-700': msg.severity === 'warn',
+             'bg-blue-100 border-blue-500 text-blue-700': msg.severity === 'info'
+           }"
+           class="p-4 mb-2 border-l-4 rounded">
+        <p class="font-bold">{{ msg.summary }}</p>
+        <p>{{ msg.detail }}</p>
+      </div>
+    </div>
+    
+    <!-- Search Section -->
+    <div class="mb-6">
+      <h3 class="text-xl font-semibold mb-4">Enter Booking ID</h3>
+      <div class="flex gap-4 items-end">
+        <div class="flex-1 max-w-md">
+          <label for="bookingId" class="block mb-2 font-medium">Booking ID</label>
+          <input 
+            pInputText 
+            id="bookingId"
+            [(ngModel)]="bookingId"
+            placeholder="Enter booking ID (e.g., 123)"
+            class="w-full"
+            [disabled]="loading"
+            (keyup.enter)="searchBooking()"
+          />
+        </div>
+        <button 
+          pButton 
+          label="Search Booking" 
+          icon="pi pi-search"
+          (click)="searchBooking()"
+          [loading]="loading"
+          [disabled]="!bookingId || loading"
+          class="h-fit"
+        ></button>
+        <button 
+          pButton 
+          label="Reset" 
+          icon="pi pi-refresh"
+          severity="secondary"
+          (click)="resetForm()"
+          [disabled]="loading"
+          class="h-fit"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="loading" class="flex justify-center my-8">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+
+    <!-- Booking Details -->
+    <div *ngIf="booking && !loading" class="mt-6">
+      <h3 class="text-xl font-semibold mb-4">Current Booking Details</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="p-4 border rounded-lg bg-gray-50">
+          <h4 class="font-semibold mb-3">Customer Information</h4>
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <span class="font-medium">Booking ID:</span>
+              <span>{{ booking.bookingId }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium">Name:</span>
+              <span>{{ booking.name }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium">Mobile:</span>
+              <span>{{ booking.mobile || 'N/A' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium">Email:</span>
+              <span>{{ booking.email || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 border rounded-lg bg-gray-50">
+          <h4 class="font-semibold mb-3">Booking Information</h4>
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-medium">Current Visit Date:</span>
+              <span class="font-bold text-primary">{{ booking.visitDate | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium">Total Amount:</span>
+              <span>₹{{ booking.totalAmount }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium">Total Tickets:</span>
+              <span>{{ booking.totalCount }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium">Booking Status:</span>
+              <p-tag [value]="booking.bookingStatus" [severity]="getBookingStatusSeverity(booking.bookingStatus)"></p-tag>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium">Payment Status:</span>
+              <p-tag [value]="booking.paymentStatus" [severity]="getPaymentStatusSeverity(booking.paymentStatus)"></p-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reschedule Section -->
+      <div class="mt-6 p-4 border-2 border-primary rounded-lg bg-blue-50">
+        <h3 class="text-xl font-semibold mb-4">Select New Visit Date</h3>
+        
+        <div class="flex gap-4 items-end">
+          <div class="flex-1 max-w-md">
+            <label for="newDate" class="block mb-2 font-medium">New Visit Date</label>
+            <p-datePicker
+              [(ngModel)]="newVisitDate"
+              [minDate]="minDate"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              placeholder="Select new date"
+              [style]="{ width: '100%' }"
+              inputId="newDate"
+            ></p-datePicker>
+          </div>
+          <button 
+            pButton 
+            label="Reschedule Booking" 
+            icon="pi pi-calendar-plus"
+            (click)="showConfirmDialog()"
+            [disabled]="!newVisitDate"
+            class="h-fit"
+          ></button>
+        </div>
+
+        <div class="mt-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+          <p class="font-semibold">Important Notes:</p>
+          <ul class="list-disc list-inside mt-2 space-y-1">
+            <li>Rescheduling must be done at least 12 hours before the current visit date</li>
+            <li>New visit date must be at least one day in the future</li>
+            <li>Old tickets will be cancelled and new tickets will be generated</li>
+            <li>Customer will receive notification with updated booking details</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </p-card>
+
+  <!-- Confirmation Dialog -->
+  <p-dialog 
+    header="Confirm Reschedule" 
+    [(visible)]="confirmDialogVisible"
+    [modal]="true"
+    [style]="{width: '450px'}"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <div class="p-4">
+      <p class="mb-4">Are you sure you want to reschedule this booking?</p>
+      
+      <div class="space-y-2 mb-4">
+        <div class="flex justify-between">
+          <span class="font-medium">Booking ID:</span>
+          <span>{{ booking?.bookingId }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="font-medium">Customer Name:</span>
+          <span>{{ booking?.name }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="font-medium">Current Date:</span>
+          <span class="text-red-600">{{ booking?.visitDate | date:'dd MMM yyyy' }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="font-medium">New Date:</span>
+          <span class="text-green-600">{{ newVisitDate | date:'dd MMM yyyy' }}</span>
+        </div>
+      </div>
+
+      <div class="p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700">
+        <p class="text-sm">This action will cancel the existing tickets and generate new ones for the selected date.</p>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button 
+        pButton 
+        label="Cancel" 
+        icon="pi pi-times"
+        severity="secondary"
+        (click)="cancelReschedule()"
+      ></button>
+      <button 
+        pButton 
+        label="Confirm Reschedule" 
+        icon="pi pi-check"
+        (click)="confirmReschedule()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+</div>

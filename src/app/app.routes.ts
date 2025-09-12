@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { staffAuthGuard } from './guards/staff-auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -12,15 +13,28 @@ export const routes: Routes = [
   },
   { 
     path: 'staff', 
-    loadComponent: () => import('./pages/staff/staff.component').then(m => m.StaffComponent) 
+    loadComponent: () => import('./pages/staff/staff.component').then(m => m.StaffComponent),
+    canActivate: [staffAuthGuard]
   },
   { 
     path: 'staff/bookings', 
-    loadComponent: () => import('./pages/staff/staff-bookings/staff-bookings.component').then(m => m.StaffBookingsComponent) 
+    loadComponent: () => import('./pages/staff/staff-bookings/staff-bookings.component').then(m => m.StaffBookingsComponent),
+    canActivate: [staffAuthGuard]
   },
   { 
     path: 'staff/booking-info', 
-    loadComponent: () => import('./pages/staff/booking-info/booking-info.component').then(m => m.BookingInfoComponent) 
+    loadComponent: () => import('./pages/staff/booking-info/booking-info.component').then(m => m.BookingInfoComponent),
+    canActivate: [staffAuthGuard]
+  },
+  { 
+    path: 'staff/scan-ticket', 
+    loadComponent: () => import('./pages/staff/scan-ticket/scan-ticket.component').then(m => m.ScanTicketComponent),
+    canActivate: [staffAuthGuard]
+  },
+  { 
+    path: 'staff/reschedule-booking', 
+    loadComponent: () => import('./pages/staff/reschedule-booking/reschedule-booking.component').then(m => m.RescheduleBookingComponent),
+    canActivate: [staffAuthGuard]
   },
   { 
     path: 'admin', 

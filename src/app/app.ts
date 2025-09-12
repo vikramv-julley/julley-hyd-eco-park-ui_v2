@@ -64,8 +64,24 @@ export class App implements OnInit, OnDestroy {
           label: 'Booking Info',
           icon: 'pi pi-info-circle',
           routerLink: '/staff/booking-info'
+        },
+        {
+          label: 'QR Scanner',
+          icon: 'pi pi-qrcode',
+          routerLink: '/staff/scan-ticket'
+        },
+        {
+          label: 'Reschedule Booking',
+          icon: 'pi pi-calendar-plus',
+          routerLink: '/staff/reschedule-booking'
         }
       ]
+    };
+
+    const rescheduleMenu = {
+      label: 'Reschedule',
+      icon: 'pi pi-calendar-plus',
+      routerLink: '/staff/reschedule-booking'
     };
 
     const adminMenu = {
@@ -110,11 +126,11 @@ export class App implements OnInit, OnDestroy {
     // Add menus based on user groups
     if (this.currentUser?.groups) {
       if (this.currentUser.groups.includes('ADMIN')) {
-        // ADMIN: show all menus
-        this.menuItems = [homeMenu, bookingMenu, staffMenu, adminMenu];
+        // ADMIN: show all menus including standalone Reschedule button
+        this.menuItems = [homeMenu, bookingMenu, staffMenu, adminMenu, rescheduleMenu];
       } else if (this.currentUser.groups.includes('STAFF')) {
-        // STAFF: show home, booking, and staff menus
-        this.menuItems = [homeMenu, bookingMenu, staffMenu];
+        // STAFF: show home, booking, staff menus, and standalone Reschedule button
+        this.menuItems = [homeMenu, bookingMenu, staffMenu, rescheduleMenu];
       }
     }
   }

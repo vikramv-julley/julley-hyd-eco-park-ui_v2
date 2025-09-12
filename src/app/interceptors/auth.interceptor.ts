@@ -8,8 +8,11 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const authService = inject(AuthService);
   const token = localStorage.getItem('access_token');
   
-  // Skip auth for certain endpoints
-  if (req.url.includes('/auth/callback') || req.url.includes('/auth/refresh') || req.url.includes('/oauth2/token')) {
+  // Skip auth for certain endpoints and staff endpoints (for development)
+  if (req.url.includes('/auth/callback') || 
+      req.url.includes('/auth/refresh') || 
+      req.url.includes('/oauth2/token') ||
+      req.url.includes('/tickets/')) {
     return next(req);
   }
 
@@ -44,8 +47,12 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   // Handle the request and catch 401 errors
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // If we get a 401 and have a refresh token, try to refresh
-      if (error.status === 401 && authService.getRefreshToken() && !req.url.includes('/auth/refresh') && !req.url.includes('/oauth2/token')) {
+      // If we get a 401 and have a refresh token, try to refresh (but skip for ticket endpoints during development)
+      if (error.status === 401 && 
+          authService.getRefreshToken() && 
+          !req.url.includes('/auth/refresh') && 
+          !req.url.includes('/oauth2/token') &&
+          !req.url.includes('/tickets/')) {
         console.log('AuthInterceptor: 401 received, attempting token refresh...');
         
         return authService.refreshToken().pipe(

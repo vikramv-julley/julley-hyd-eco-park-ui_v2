@@ -31,4 +31,12 @@ export class BookingsService {
       responseType: 'blob'
     });
   }
+
+  rescheduleBooking(bookingId: number, newVisitDate: string): Observable<any> {
+    const request = {
+      newVisitDate: newVisitDate,
+      updatedBy: 'STAFF'
+    };
+    return this.http.patch<any>(`${this.baseUrl}/bookings/${bookingId}/reschedule`, request);
+  }
 }

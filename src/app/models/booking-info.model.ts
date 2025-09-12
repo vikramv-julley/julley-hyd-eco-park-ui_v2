@@ -7,19 +7,27 @@ export interface BookingItem {
 }
 
 export interface BookingInfo {
-  customerName: string;
-  customerPhone: string;
-  booking_items: BookingItem[];
+  bookingId?: number;
+  name?: string;
+  mobile?: string;
+  email?: string;
+  customerName?: string;
+  customerPhone?: string;
+  booking_items?: BookingItem[];
   customerEmail?: string;
   totalAmount: number;
-  tax_amount: number;
+  taxAmount?: number;
+  tax_amount?: number;
   totalCount: number;
-  bookingStatus: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+  bookingStatus: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
   paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED';
-  payment_method: string;
+  paymentMethod?: string;
+  payment_method?: string;
+  bookingItems?: string;
   visitDate: string;
   validFrom: string;
   validTo: string;
+  createDate?: string;
   createdBy: string;
   razorpay_payment_id?: string;
   razorpay_order_id?: string;

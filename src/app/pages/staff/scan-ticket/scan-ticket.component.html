@@ -1,0 +1,196 @@
+<div class="scan-ticket-container">
+  <div class="scanner-header">
+    <h2>Ticket Scanner</h2>
+    <p class="text-600">Scan QR codes to validate and admit visitors</p>
+  </div>
+
+  <!-- Success/Error Animations -->
+  <div class="animation-overlay" [class.show]="showSuccessAnimation || showErrorAnimation">
+    <div class="animation-content">
+      <div 
+        class="success-animation" 
+        [class.show]="showSuccessAnimation"
+      >
+        <i class="pi pi-check-circle" style="font-size: 4rem; color: #22c55e;"></i>
+        <h3>Valid Ticket!</h3>
+      </div>
+      <div 
+        class="error-animation" 
+        [class.show]="showErrorAnimation"
+      >
+        <i class="pi pi-times-circle" style="font-size: 4rem; color: #ef4444;"></i>
+        <h3>Invalid Ticket!</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scanner Controls -->
+  <div class="scanner-controls">
+    <p-button 
+      label="Start Scanner" 
+      icon="pi pi-camera" 
+      [loading]="scannerLoading"
+      [disabled]="scannerEnabled || isValidating"
+      (click)="startScanner()"
+      class="p-button-lg p-button-success">
+    </p-button>
+
+    <p-button 
+      label="Manual Entry" 
+      icon="pi pi-pencil"
+      [disabled]="isValidating"
+      (click)="toggleManualEntry()"
+      [outlined]="!showManualEntry"
+      class="p-button-lg">
+    </p-button>
+
+    <p-button 
+      label="Switch Camera" 
+      icon="pi pi-refresh"
+      [disabled]="cameras.length <= 1 || !scannerEnabled"
+      (click)="switchCamera()"
+      [outlined]="true"
+      class="p-button-lg">
+    </p-button>
+  </div>
+
+  <!-- QR Scanner -->
+  <div class="scanner-area" [class.active]="scannerEnabled">
+    <div *ngIf="scannerLoading" class="scanner-loading">
+      <p-progressSpinner></p-progressSpinner>
+      <p>Initializing camera...</p>
+    </div>
+
+    <div *ngIf="scannerEnabled && !isValidating" class="scanner-frame">
+      <zxing-scanner
+        #scanner
+        [device]="currentDevice"
+        [tryHarder]="true"
+        [enable]="scannerEnabled"
+        (scanSuccess)="onCodeResult($event)"
+        (camerasFound)="cameras = $event">
+      </zxing-scanner>
+      
+      <div class="scanner-overlay">
+        <div class="scanner-box"></div>
+        <p>Position QR code within the frame</p>
+      </div>
+    </div>
+
+    <div *ngIf="isValidating" class="validation-loading">
+      <p-progressSpinner></p-progressSpinner>
+      <p>Validating ticket...</p>
+    </div>
+  </div>
+
+  <!-- Manual Entry -->
+  <div class="manual-entry" [class.show]="showManualEntry">
+    <div class="input-group">
+      <input 
+        type="text" 
+        pInputText 
+        placeholder="Enter ticket code manually"
+        [(ngModel)]="manualTicketCode"
+        (keyup.enter)="onManualValidate()"
+        class="manual-input">
+      <p-button 
+        icon="pi pi-check" 
+        [loading]="isValidating"
+        (click)="onManualValidate()"
+        [disabled]="!manualTicketCode.trim()"
+        class="validate-btn">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Ticket Details Dialog -->
+  <p-dialog 
+    header="Ticket Details" 
+    [(visible)]="showTicketDetails" 
+    [modal]="true" 
+    [style]="{ width: '90vw', maxWidth: '500px' }"
+    [draggable]="false"
+    [resizable]="false">
+    
+    <div *ngIf="validationResult" class="ticket-details">
+      <!-- Status Tag -->
+      <div class="status-section">
+        <p-tag 
+          [value]="validationResult.status" 
+          [severity]="getStatusSeverity(validationResult.status)"
+          [rounded]="true"
+          class="status-tag">
+        </p-tag>
+        <p class="status-message">{{ validationResult.message }}</p>
+      </div>
+
+      <!-- Ticket Information -->
+      <div *ngIf="validationResult.ticketDetails" class="ticket-info">
+        <p-divider></p-divider>
+        
+        <div class="detail-row">
+          <label>Ticket Code:</label>
+          <span class="ticket-code">{{ validationResult.ticketDetails.ticketCode }}</span>
+        </div>
+
+        <div class="detail-row">
+          <label>Customer:</label>
+          <span>{{ validationResult.ticketDetails.customerName }}</span>
+        </div>
+
+        <div class="detail-row">
+          <label>Phone:</label>
+          <span>{{ validationResult.ticketDetails.customerPhone }}</span>
+        </div>
+
+        <div class="detail-row">
+          <label>Visit Date:</label>
+          <span>{{ formatDate(validationResult.ticketDetails.visitDate) }}</span>
+        </div>
+
+        <div class="detail-row">
+          <label>Ticket Type:</label>
+          <span>{{ validationResult.ticketDetails.categoryName }} - {{ validationResult.ticketDetails.offeringName }}</span>
+        </div>
+
+        <div class="detail-row">
+          <label>Price:</label>
+          <span class="price">{{ formatCurrency(validationResult.ticketDetails.ticketPrice) }}</span>
+        </div>
+
+        <div class="detail-row">
+          <label>Booking ID:</label>
+          <span>#{{ validationResult.ticketDetails.bookingId }}</span>
+        </div>
+
+        <div *ngIf="validationResult.ticketDetails.used" class="detail-row">
+          <label>Last Used:</label>
+          <span>{{ formatDate(validationResult.ticketDetails.lastUsedAt!) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer">
+        <p-button 
+          label="Cancel" 
+          icon="pi pi-times" 
+          (click)="resetScanner()"
+          [outlined]="true"
+          class="p-button-sm">
+        </p-button>
+
+        <p-button 
+          *ngIf="validationResult?.canEnter"
+          label="Allow Entry" 
+          icon="pi pi-check" 
+          (click)="recordEntry()"
+          class="p-button-sm p-button-success">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Toast Messages -->
+  <p-toast position="top-center" key="tc"></p-toast>
+</div>

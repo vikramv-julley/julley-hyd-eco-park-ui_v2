@@ -29,6 +29,8 @@
     "@angular/platform-browser": "^20.1.0",
     "@angular/router": "^20.1.0",
     "@primeuix/themes": "latest",
+    "@zxing/library": "^0.21.3",
+    "@zxing/ngx-scanner": "^20.0.0",
     "amazon-cognito-identity-js": "^6.3.15",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",

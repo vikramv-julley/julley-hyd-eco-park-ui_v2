@@ -49,6 +49,7 @@ export class BookTicketsComponent implements OnInit {
   private paymentService = inject(PaymentService);
 
   ngOnInit() {
+    console.log('BookTicketsComponent initialized');
     this.loadOfferings();
     this.loadRazorpayScript();
   }
@@ -132,6 +133,7 @@ export class BookTicketsComponent implements OnInit {
       this.toastService.showWarn('Please select at least one ticket');
       return;
     }
+    console.log('Opening booking dialog');
     this.showBookingDialog = true;
   }
 
@@ -139,6 +141,7 @@ export class BookTicketsComponent implements OnInit {
     if (!this.validateBookingForm()) {
       return;
     }
+    
     
     this.isProcessingPayment = true;
     
@@ -323,4 +326,5 @@ export class BookTicketsComponent implements OnInit {
   closeBookingDialog(): void {
     this.showBookingDialog = false;
   }
+
 }

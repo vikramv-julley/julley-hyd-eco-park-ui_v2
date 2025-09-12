@@ -1,4 +1,382 @@
-<div class="p-4">
-  <h1 class="text-2xl font-bold mb-4">Booking Info</h1>
-  
+<div class="container mx-auto p-4">
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="flex justify-between items-center p-4">
+        <h2 class="text-2xl font-bold">Booking Info & Ticket Search</h2>
+        <div class="flex gap-2">
+          <button pButton 
+                  type="button" 
+                  label="Refresh" 
+                  icon="pi pi-refresh" 
+                  (click)="loadRecentTickets()"
+                  [loading]="loading"
+                  class="p-button-secondary"></button>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Unified Search Section -->
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+      <h3 class="text-lg font-semibold mb-4">Search Tickets</h3>
+      <div class="flex gap-2">
+        <p-autoComplete 
+          [(ngModel)]="searchQuery"
+          [suggestions]="filteredSuggestions"
+          (completeMethod)="searchSuggestions($event)"
+          (onSelect)="onSelectSuggestion($event)"
+          [dropdown]="true"
+          field="label"
+          placeholder="Search by ticket code, name, email, phone, or booking ID..."
+          class="flex-grow"
+          [style]="{'width': '100%'}"
+          [inputStyle]="{'width': '100%'}"
+          (keyup.enter)="performUnifiedSearch()">
+        </p-autoComplete>
+        
+        <button pButton 
+                type="button" 
+                label="Search" 
+                icon="pi pi-search" 
+                (click)="performUnifiedSearch()"
+                [loading]="loading"
+                class="p-button-primary"></button>
+        <button pButton 
+                type="button" 
+                label="Clear" 
+                icon="pi pi-times" 
+                (click)="clearUnifiedSearch()"
+                class="p-button-secondary"></button>
+      </div>
+      <p class="text-sm text-gray-600 mt-2">
+        <i class="pi pi-info-circle mr-1"></i>
+        Type to search across all fields. Select from suggestions or press Enter to search.
+      </p>
+    </div>
+
+    <!-- Results Table -->
+    <div class="mt-6">
+      <h3 class="text-lg font-semibold mb-4">
+        {{ bookingGroups.length > 0 ? 'Search Results' : 'Recent Bookings' }}
+        <span class="text-sm text-gray-500 ml-2">({{ bookingGroups.length }} bookings found)</span>
+      </h3>
+      
+      <p-table [value]="bookingGroups" 
+               [paginator]="true" 
+               [rows]="10"
+               [showCurrentPageReport]="true"
+               currentPageReportTemplate="Showing {first} to {last} of {totalRecords} bookings"
+               [loading]="loading"
+               [tableStyle]="{'min-width': '50rem'}">
+        
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Booking ID</th>
+            <th>Customer Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Total Tickets</th>
+            <th>Ticket Types</th>
+            <th>Visit Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+        
+        <ng-template pTemplate="body" let-booking>
+          <tr>
+            <td class="font-mono font-bold">#{{ booking.bookingId }}</td>
+            <td>{{ booking.customerName }}</td>
+            <td>{{ booking.customerEmail }}</td>
+            <td>{{ booking.customerPhone }}</td>
+            <td>
+              <span class="font-bold text-lg">{{ booking.totalTickets }}</span>
+              <span class="text-sm text-gray-600"> ticket(s)</span>
+            </td>
+            <td>{{ booking.ticketTypeSummary }}</td>
+            <td>{{ booking.visitDate }}</td>
+            <td>
+              <p-tag [value]="getStatusLabel(booking.status)" 
+                     [severity]="getStatusSeverity(booking.status)"></p-tag>
+            </td>
+            <td>
+              <button pButton 
+                      type="button" 
+                      icon="pi pi-eye" 
+                      label="View & Download"
+                      pTooltip="View All Tickets & Download"
+                      (click)="viewBookingGroupTickets(booking)"
+                      [loading]="loadingBookingTickets"
+                      class="p-button-text p-button-sm"></button>
+            </td>
+          </tr>
+        </ng-template>
+        
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9" class="text-center py-4">
+              <i class="pi pi-inbox text-4xl text-gray-400"></i>
+              <p class="mt-2 text-gray-500">No tickets found</p>
+            </td>
+          </tr>
+        </ng-template>
+        
+        <ng-template pTemplate="loadingbody">
+          <tr>
+            <td colspan="9" class="text-center py-4">
+              <p-progressSpinner [style]="{width: '50px', height: '50px'}"></p-progressSpinner>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-card>
+
+  <!-- Ticket Details Dialog -->
+  <p-dialog [(visible)]="showTicketDialog" 
+            [modal]="true" 
+            [closable]="true"
+            [draggable]="false"
+            [style]="{width: '600px'}"
+            header="Ticket Details">
+    
+    <div *ngIf="selectedTicket" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="font-semibold block mb-1">Ticket Code:</label>
+          <p class="font-mono">{{ selectedTicket.ticketCode }}</p>
+        </div>
+        
+        <div>
+          <label class="font-semibold block mb-1">Status:</label>
+          <p-tag [value]="getStatusLabel(selectedTicket.isActive)" 
+                 [severity]="getStatusSeverity(selectedTicket.isActive)"></p-tag>
+        </div>
+        
+        <div>
+          <label class="font-semibold block mb-1">Customer Name:</label>
+          <p>{{ selectedTicket.booking?.name || 'N/A' }}</p>
+        </div>
+        
+        <div>
+          <label class="font-semibold block mb-1">Email:</label>
+          <p>{{ selectedTicket.booking?.email || 'N/A' }}</p>
+        </div>
+        
+        <div>
+          <label class="font-semibold block mb-1">Phone:</label>
+          <p>{{ selectedTicket.booking?.mobile || 'N/A' }}</p>
+        </div>
+        
+        <div>
+          <label class="font-semibold block mb-1">Booking ID:</label>
+          <p>{{ selectedTicket.booking?.bookingId || 'N/A' }}</p>
+        </div>
+        
+        <div>
+          <label class="font-semibold block mb-1">Ticket Type:</label>
+          <p>{{ getTicketTypeDisplay(selectedTicket) }}</p>
+        </div>
+        
+        <div>
+          <label class="font-semibold block mb-1">Visit Date:</label>
+          <p>{{ selectedTicket.booking?.visitDate || 'N/A' }}</p>
+        </div>
+        
+        <div>
+          <label class="font-semibold block mb-1">Total Amount:</label>
+          <p>₹{{ selectedTicket.booking?.totalAmount || 'N/A' }}</p>
+        </div>
+        
+        <div>
+          <label class="font-semibold block mb-1">Payment Status:</label>
+          <p>{{ selectedTicket.booking?.paymentStatus || 'N/A' }}</p>
+        </div>
+        
+        <div class="col-span-2">
+          <label class="font-semibold block mb-1">Created Date:</label>
+          <p>{{ formatDate(selectedTicket.createDate) }}</p>
+        </div>
+      </div>
+      
+      <!-- QR Code Display (if available) -->
+      <div *ngIf="selectedTicket.qrCode" class="text-center mt-4">
+        <label class="font-semibold block mb-2">QR Code:</label>
+        <img [src]="'data:image/png;base64,' + selectedTicket.qrCode" 
+             alt="QR Code" 
+             class="mx-auto border border-gray-300 p-2"
+             style="max-width: 200px;">
+      </div>
+    </div>
+    
+    <ng-template pTemplate="footer">
+      <button pButton 
+              type="button" 
+              label="Download Ticket" 
+              icon="pi pi-download"
+              (click)="downloadSingleTicket(selectedTicket!); showTicketDialog = false"
+              [loading]="downloadingTicket"
+              class="p-button-success"></button>
+      <button pButton 
+              type="button" 
+              label="Close" 
+              icon="pi pi-times"
+              (click)="showTicketDialog = false"
+              class="p-button-secondary"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- All Booking Tickets Dialog -->
+  <p-dialog [(visible)]="showBookingDialog" 
+            [modal]="true" 
+            [closable]="true"
+            [draggable]="false"
+            [style]="{width: '90vw', maxWidth: '1200px'}"
+            header="All Tickets for This Booking">
+    
+    <div *ngIf="selectedBookingTickets.length > 0" class="space-y-4">
+      <!-- Booking Summary -->
+      <div class="bg-gray-50 p-4 rounded-lg mb-4">
+        <h3 class="text-lg font-semibold mb-2">Booking Information</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label class="font-semibold block text-sm">Customer Name:</label>
+            <p>{{ selectedBookingTickets[0].booking?.name || 'N/A' }}</p>
+          </div>
+          <div>
+            <label class="font-semibold block text-sm">Email:</label>
+            <p>{{ selectedBookingTickets[0].booking?.email || 'N/A' }}</p>
+          </div>
+          <div>
+            <label class="font-semibold block text-sm">Phone:</label>
+            <p>{{ selectedBookingTickets[0].booking?.mobile || 'N/A' }}</p>
+          </div>
+          <div>
+            <label class="font-semibold block text-sm">Visit Date:</label>
+            <p>{{ selectedBookingTickets[0].booking?.visitDate || 'N/A' }}</p>
+          </div>
+          <div>
+            <label class="font-semibold block text-sm">Booking ID:</label>
+            <p class="font-mono">{{ selectedBookingTickets[0].booking?.bookingId || 'N/A' }}</p>
+          </div>
+          <div>
+            <label class="font-semibold block text-sm">Total Amount:</label>
+            <p class="font-bold">₹{{ selectedBookingTickets[0].booking?.totalAmount || 'N/A' }}</p>
+          </div>
+          <div>
+            <label class="font-semibold block text-sm">Payment Status:</label>
+            <p>{{ selectedBookingTickets[0].booking?.paymentStatus || 'N/A' }}</p>
+          </div>
+          <div>
+            <label class="font-semibold block text-sm">Total Tickets:</label>
+            <p class="font-bold">{{ selectedBookingTickets.length }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- All Tickets Grid - PDF Style -->
+      <div class="border rounded-lg p-4">
+        <h3 class="text-lg font-semibold mb-4 text-center">All Tickets ({{ selectedBookingTickets.length }})</h3>
+        <div class="space-y-6 max-h-[600px] overflow-y-auto">
+          <div *ngFor="let ticket of selectedBookingTickets; let i = index" 
+               class="border-2 border-black rounded-lg bg-white">
+            
+            <!-- Ticket Container with proper layout -->
+            <div class="flex">
+              <!-- Left Section - QR Code (Fixed width) -->
+              <div class="w-1/3 p-4 border-r-2 border-gray-300 flex flex-col items-center justify-center bg-gray-50">
+                <div *ngIf="ticket.qrCode" class="mb-2">
+                  <img [src]="'data:image/png;base64,' + ticket.qrCode" 
+                       alt="QR Code" 
+                       class="border-2 border-gray-400 p-2 bg-white"
+                       style="width: 160px; height: 160px;">
+                </div>
+                <div *ngIf="!ticket.qrCode" class="mb-2 border-2 border-gray-400 p-2 bg-gray-100 flex items-center justify-center"
+                     style="width: 160px; height: 160px;">
+                  <span class="text-gray-500">No QR Code</span>
+                </div>
+                <p class="font-mono text-sm font-bold text-center mt-2 text-gray-800">{{ ticket.ticketCode || 'NO CODE' }}</p>
+              </div>
+              
+              <!-- Right Section - Ticket Details -->
+              <div class="w-2/3 p-4">
+                <!-- Header with Ticket Number and Status -->
+                <div class="flex justify-between items-center mb-4 pb-2 border-b-2 border-gray-200">
+                  <h4 class="text-xl font-bold text-blue-600">Ticket #{{ i + 1 }}</h4>
+                  <div class="flex items-center gap-2">
+                    <p-tag [value]="getStatusLabel(ticket.isActive)" 
+                           [severity]="getStatusSeverity(ticket.isActive)"></p-tag>
+                    <button pButton 
+                            type="button" 
+                            icon="pi pi-download" 
+                            pTooltip="Download this ticket"
+                            (click)="downloadSingleTicket(ticket)"
+                            [loading]="downloadingTicket"
+                            class="p-button-sm p-button-outlined p-button-secondary"></button>
+                  </div>
+                </div>
+                
+                <!-- Details Table -->
+                <table class="w-full">
+                  <tr class="border-b border-gray-100">
+                    <td class="py-2 pr-4 font-semibold text-gray-700 w-1/3">Ticket Code:</td>
+                    <td class="py-2 text-gray-900 font-mono">{{ ticket.ticketCode || 'N/A' }}</td>
+                  </tr>
+                  <tr class="border-b border-gray-100">
+                    <td class="py-2 pr-4 font-semibold text-gray-700">Ticket Type:</td>
+                    <td class="py-2 text-gray-900">{{ ticket.ticketType?.offering_name || 'N/A' }}</td>
+                  </tr>
+                  <tr class="border-b border-gray-100">
+                    <td class="py-2 pr-4 font-semibold text-gray-700">Category:</td>
+                    <td class="py-2 text-gray-900">{{ ticket.ticketType?.category_name || 'N/A' }}</td>
+                  </tr>
+                  <tr class="border-b border-gray-100">
+                    <td class="py-2 pr-4 font-semibold text-gray-700">Offering:</td>
+                    <td class="py-2 text-gray-900">{{ ticket.ticketType?.offering_name || 'N/A' }}</td>
+                  </tr>
+                  <tr class="border-b border-gray-100">
+                    <td class="py-2 pr-4 font-semibold text-gray-700">Unit Price:</td>
+                    <td class="py-2 text-gray-900 font-bold text-lg">₹{{ ticket.ticketType?.unit_price || '0' }}</td>
+                  </tr>
+                  <tr class="border-b border-gray-100">
+                    <td class="py-2 pr-4 font-semibold text-gray-700">Created Date:</td>
+                    <td class="py-2 text-gray-900">{{ formatDate(ticket.createDate) }}</td>
+                  </tr>
+                  <tr>
+                    <td class="py-2 pr-4 font-semibold text-gray-700">Valid For:</td>
+                    <td class="py-2 text-gray-900">
+                      {{ ticket.booking?.visitDate || 'N/A' }}
+                      <span *ngIf="ticket.booking?.validFrom && ticket.booking?.validTo" class="text-sm text-gray-600">
+                        ({{ ticket.booking.validFrom }} - {{ ticket.booking.validTo }})
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            
+            <!-- Footer message -->
+            <div class="bg-gray-100 px-4 py-2 border-t text-center">
+              <p class="text-xs text-gray-600 italic">Valid for single entry only. Please present this ticket at the entrance.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <ng-template pTemplate="footer">
+      <button pButton 
+              type="button" 
+              label="Download All Tickets" 
+              icon="pi pi-download"
+              (click)="downloadBookingTickets(selectedBookingTickets[0].booking?.bookingId); showBookingDialog = false"
+              [loading]="downloadingBooking"
+              class="p-button-success"></button>
+      <button pButton 
+              type="button" 
+              label="Close" 
+              icon="pi pi-times"
+              (click)="showBookingDialog = false"
+              class="p-button-secondary"></button>
+    </ng-template>
+  </p-dialog>
 </div>
